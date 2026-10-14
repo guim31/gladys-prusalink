@@ -1,67 +1,188 @@
-# Template de démonstration
+# PrusaLink
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Suivez vos imprimantes 3D Prusa depuis Gladys grâce à **PrusaLink**,
+l'interface web locale intégrée au firmware des imprimantes Prusa récentes (et
+installée sur un Raspberry Pi pour la MK3S+). Tout reste sur votre réseau
+local : Gladys parle directement à l'imprimante, aucun compte Prusa Connect
+n'est nécessaire.
 
-## Ce que vous obtenez
+**Développée sans le matériel : vos retours sont les bienvenus.**
+L'intégration a été construite à partir de la description de l'API
+PrusaLink, de l'intégration Home Assistant et de ses réponses enregistrées, et
+testée contre un simulateur qui s'authentifie comme le firmware de
+l'imprimante. Elle n'a pas encore été essayée sur une vraie imprimante :
+dites-nous sur le forum Gladys comment elle se comporte avec la vôtre.
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+## Prérequis
+
+- Gladys Assistant 5.1 ou plus récent.
+- Une imprimante Prusa avec PrusaLink : MK4, MK4S, MK3.9, MK3.5, Core One, XL
+  ou MINI+ avec un firmware 5.0 ou plus (6.x conseillé), reliée à votre réseau
+  en Wi-Fi ou Ethernet ; ou une MK3S+ avec PrusaLink sur un Raspberry Pi.
+- PrusaLink activé sur l'imprimante : **Réglages → Réseau → PrusaLink**. Le
+  même écran affiche le mot de passe (utilisateur `maker`).
+- L'imprimante joignable depuis la machine Gladys (même réseau, ou routé).
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+1. Sur l'imprimante, ouvrez **Réglages → Réseau** : notez son adresse IP,
+   activez **PrusaLink** et notez son mot de passe. Une adresse IP fixe (une
+   réservation DHCP dans votre box) évite de perdre l'imprimante plus tard.
+2. Dans Gladys, ouvrez l'onglet **Configuration** de l'intégration.
+3. Dans **Adresse de l'imprimante**, saisissez l'adresse IP, par exemple
+   `192.168.1.60` (un port est accepté : `192.168.1.60:8080`). Préférez une
+   adresse IP : les noms `prusa-mk4.local` ne se résolvent pas dans le
+   conteneur de l'intégration.
+4. Laissez **Utilisateur** vide (l'utilisateur des imprimantes est toujours
+   `maker`). Seul PrusaLink sur Raspberry Pi permet d'en choisir un autre dans
+   son assistant d'installation.
+5. Dans **Mot de passe PrusaLink**, collez le mot de passe affiché par
+   l'imprimante. Les très anciens firmwares utilisent une clé d'API à la
+   place : collez-la dans le même champ, l'intégration essaie les deux.
+6. Enregistrez. Le statut de l'écran Configuration passe à connecté après la
+   première réponse de l'imprimante.
+7. Une deuxième ou troisième imprimante : remplissez **Imprimante 2** et
+   **Imprimante 3** de la même façon.
+8. **Langue** fixe la langue des noms de fonctionnalités et des textes créés
+   par l'intégration (français par défaut). Les noms des fonctionnalités sont
+   fixés à l'ajout de l'appareil dans Gladys.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+Ajoutez ensuite l'imprimante depuis l'onglet **Découverte**.
 
-## Actions
+## L'appareil imprimante
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+Un appareil par imprimante, nommé d'après le nom donné à l'imprimante dans
+PrusaLink, ou son nom d'hôte. L'intégration lit l'imprimante toutes les
+10 secondes pendant une impression et toutes les 30 secondes sinon (Home
+Assistant la lit toutes les 30 secondes) : l'imprimante est un petit serveur
+web, elle n'est pas interrogée plus souvent.
 
-## Scènes
+| Fonctionnalité       | Ce qu'elle affiche                                                                                                                                                                                   |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| État                 | Au repos, Prête, Occupée, Impression, En pause, Intervention requise, Terminée, Arrêtée, Erreur, Imprimante injoignable, Mot de passe absent ou refusé                                               |
+| Fichier              | Le fichier en cours d'impression (son nom complet, `benchy.bgcode`), ou « Aucun fichier »                                                                                                            |
+| Progression          | Pourcentage de l'impression (0 sans travail)                                                                                                                                                         |
+| Temps écoulé         | En minutes                                                                                                                                                                                           |
+| Temps restant        | Estimé par l'imprimante, en minutes (0 hors impression)                                                                                                                                              |
+| Buse, Plateau        | Températures, en degrés entiers                                                                                                                                                                      |
+| … (consigne)         | Consignes, en lecture seule                                                                                                                                                                          |
+| Vitesse d'impression | Le facteur de vitesse réglé sur l'imprimante, en pourcentage (100 % = normal)                                                                                                                        |
+| Filament             | Le type de filament chargé (PLA, PETG…), quand l'imprimante l'indique                                                                                                                                |
+| Pause, Reprise       | Boutons poussoirs                                                                                                                                                                                    |
+| Caméra               | L'image de la caméra, seulement pour PrusaLink sur Raspberry Pi avec une caméra (les caméras de la Core One et de la MK4 envoient leurs images à Prusa Connect seulement, PrusaLink n'y a pas accès) |
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+Il n'y a volontairement **pas de bouton d'annulation** sur l'appareil : un
+appui sans confirmation ruinerait une impression. L'annulation passe par le
+widget (avec confirmation) et par les scènes. Les températures et consignes
+sont en lecture seule, et l'intégration n'envoie **aucune commande de
+chauffe** : une chauffe de l'imprimante ne peut jamais être allumée depuis
+Gladys, ni par HomeKit, Alexa ou Google. Ce sont des « températures
+d'appareil » pour Gladys : elles ne comptent jamais dans la température de la
+pièce.
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+Quand l'imprimante se met à indiquer son type de filament, ou qu'une caméra
+apparaît, Gladys propose de mettre à jour l'appareil dans l'onglet
+**Découverte**.
 
-## Tableau de bord
+## Widget de tableau de bord
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Ajoutez le widget **Imprimante 3D** à un tableau de bord et choisissez
+l'imprimante dans ses réglages. Il affiche :
+
+- la jauge de progression, le temps restant, les températures de la buse et
+  du plateau (en direct) ;
+- l'image de la caméra s'il y en a une, sinon la vignette du fichier en cours
+  d'impression ;
+- l'état, le message de l'imprimante quand quelque chose ne va pas, le
+  fichier, le temps écoulé, l'heure de fin prévue, les consignes actives, la
+  vitesse et le filament ;
+- les boutons utiles au moment : **Pause** ou **Reprendre** et **Annuler**
+  (demande confirmation) pendant une impression. Quand l'imprimante demande
+  une intervention, seulement Annuler : la réponse se donne sur l'imprimante.
+
+## Déclencheurs de scène
+
+Dans la catégorie **Intégrations** de l'éditeur de scènes. Chacun peut être
+limité à une imprimante.
+
+- **Impression démarrée** — variables : nom de l'imprimante, fichier.
+- **Impression terminée** — variables : nom de l'imprimante, fichier, durée
+  d'impression (en texte, comme `1 h 05 min`, et en minutes).
+- **Impression échouée ou annulée** — peut être limité à une raison (annulée,
+  erreur). Variables : nom de l'imprimante, fichier, durée d'impression,
+  raison, message de l'imprimante.
+- **Impression en pause** — depuis l'imprimante, PrusaLink, Prusa Connect ou
+  Gladys. Variables : nom de l'imprimante, fichier, temps écoulé.
+- **Intervention requise** — l'imprimante attend quelqu'un : fin de filament,
+  question sur son écran. Variables : nom de l'imprimante, fichier, temps
+  écoulé, message de l'imprimante.
+- **Erreur de l'imprimante** — l'imprimante est passée en erreur, pendant une
+  impression ou non (une erreur pendant une impression déclenche aussi
+  Impression échouée). Variables : nom de l'imprimante, fichier, temps écoulé,
+  message de l'imprimante.
+
+Les variables se lisent dans les actions suivantes avec, par exemple,
+`{{triggerEvent.data.file}}` et `{{triggerEvent.data.duration}}`.
+
+## Actions de scène
+
+- **Mettre en pause, reprendre ou annuler une impression** — renvoie
+  **Appliqué** : faux quand il n'y avait rien à mettre en pause, reprendre ou
+  annuler (la scène continue). Une annulation est définitive : choisissez-la
+  en connaissance de cause.
+- **Lire l'état de l'imprimante** — renvoie une **Phrase** toute prête à
+  envoyer ou à dire (« Prusa MK4 : Impression, benchy.bgcode, 37 %, encore
+  1 h 05 min. »), et les valeurs à tester dans les actions suivantes : état
+  (`printing`, `paused`, `finished`…), état tel qu'affiché, fichier,
+  progression, temps restant en minutes.
+
+## Exemples de scènes
+
+- **Impression terminée → notification** : déclencheur Impression terminée,
+  action « Envoyer un message » :
+  `{{triggerEvent.data.file}} terminé en {{triggerEvent.data.duration}}`.
+- **Fin de filament → appeler quelqu'un** : déclencheur Intervention requise,
+  action « Envoyer un message » :
+  `L'imprimante a besoin de vous : {{triggerEvent.data.message}}`.
+- **Fumée détectée → arrêter l'impression** : déclencheur sur le détecteur de
+  fumée, action Mettre en pause, reprendre ou annuler une impression
+  (annuler), puis éteindre la prise connectée de l'imprimante.
+- **Où en est mon impression ?** : une action « Lire l'état de l'imprimante »,
+  puis « Envoyer un message » avec sa phrase, sur un bouton ou toutes les
+  heures pendant une impression.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **PrusaLink ne répond pas** : vérifiez que PrusaLink est activé sur
+  l'imprimante, et l'adresse depuis la machine Gladys
+  (`curl http://192.168.1.60/api/version` répond 401 sans mot de passe :
+  l'imprimante est joignable). Utilisez une adresse IP plutôt qu'un nom
+  `.local`.
+- **Utilisateur ou mot de passe refusé** : recopiez le mot de passe depuis
+  **Réglages → Réseau → PrusaLink** (il change si vous le régénérez sur
+  l'imprimante). Laissez Utilisateur vide, sauf pour PrusaLink sur Raspberry
+  Pi.
+- **Les valeurs bougent lentement** : l'imprimante est lue toutes les
+  10 secondes pendant une impression, toutes les 30 secondes sinon. Une
+  impression plus courte peut n'être vue qu'à sa fin.
+- **Pas de type de filament** : les anciens firmwares ne l'indiquent pas ; la
+  fonctionnalité n'existe alors pas.
+- **Pas d'image de caméra** : seul PrusaLink sur Raspberry Pi donne une image
+  de caméra ; elle doit être un JPEG ou un PNG d'environ 110 Ko au plus (une
+  limite de Gladys).
+- Journaux : dans la page de l'intégration dans Gladys, ou `docker logs` sur
+  la machine. `LOG_LEVEL=debug` donne le détail. Le mot de passe n'apparaît
+  jamais dans les journaux.
+
+## Limites
+
+- Jusqu'à trois imprimantes.
+- Pas d'envoi de fichier, pas de lancement d'impression depuis Gladys, aucune
+  commande de température ni de G-code, pas de timelapse, pas de Prusa Connect
+  (cloud).
+- L'imprimante est lue, elle ne pousse rien : un évènement de moins de
+  10 secondes peut passer inaperçu.
+- La XL n'indique qu'une seule température de buse.
+- Développée sans le matériel : vos retours sont les bienvenus.
+- Sans lien avec Prusa Research. Prusa, Original Prusa et PrusaLink sont des
+  marques de Prusa Research a.s.

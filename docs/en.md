@@ -1,61 +1,168 @@
-# Demo Devices Template
+# PrusaLink
 
-This is the user documentation of the integration. Gladys re-hosts this file
-and shows a permanent **Documentation** link to it in the Configuration screen
-(in the user's language, with English as the fallback) — it is when
-configuring that the user needs it most. Keep the short onboarding hints in
-the `section` blocks of the manifest `config_schema`; put the long
-step-by-step (screenshots, troubleshooting…) here.
+Follow your Prusa 3D printers from Gladys through **PrusaLink**, the local web
+interface built into the firmware of the recent Prusa printers (and installed
+on a Raspberry Pi for the MK3S+). Everything stays on your local network:
+Gladys talks to the printer directly, no Prusa Connect account is needed.
 
-## What you get
+**Developed without the hardware: feedback welcome.** The integration was
+built from the PrusaLink API description, the Home Assistant integration and
+its recorded answers, and tested against a simulator that authenticates like
+the printer firmware. It has not been tried on a real printer yet: tell us on
+the Gladys forum how it goes on yours.
 
-Six demo devices show up after installation: a weather station (real data
-from Open-Meteo), a switch, a dimmable light, a smart plug with power
-metering, a motion sensor and a camera.
+## Requirements
+
+- Gladys Assistant 5.1 or later.
+- A Prusa printer with PrusaLink: MK4, MK4S, MK3.9, MK3.5, Core One, XL or
+  MINI+ with a firmware 5.0 or later (6.x recommended), connected to your
+  network by Wi-Fi or Ethernet; or an MK3S+ with PrusaLink on a Raspberry Pi.
+- PrusaLink enabled on the printer: **Settings → Network → PrusaLink**. The
+  same screen shows the password (user `maker`).
+- The printer reachable from the Gladys machine (same network, or routed).
 
 ## Configuration
 
-1. Open the **Configuration** tab of the integration.
-2. Set the **latitude** and **longitude** the demo weather station should
-   observe (they default to Paris), and pick your temperature unit.
-   The **refresh interval** sets how often the weather station and the
-   plug's power are read: every 5 minutes by default, every minute at most.
-3. Save: the devices appear in the **Discovery** tab, ready to be added.
+1. On the printer, open **Settings → Network**: note its IP address, enable
+   **PrusaLink** and note its password. A fixed IP address (a DHCP
+   reservation in your router) avoids losing the printer later.
+2. In Gladys, open the **Configuration** tab of the integration.
+3. In **Printer address**, enter the IP address, for instance `192.168.1.60`
+   (a port is allowed: `192.168.1.60:8080`). Prefer an IP address:
+   `prusa-mk4.local` names do not resolve inside the integration container.
+4. Leave **User** empty (the printer user is always `maker`). Only PrusaLink
+   on a Raspberry Pi lets you choose another one in its setup wizard.
+5. In **PrusaLink password**, paste the password shown by the printer. Very
+   old firmwares use an API key instead: paste it in the same field, the
+   integration tries both.
+6. Save. The status of the Configuration screen turns to connected after the
+   first answer of the printer.
+7. A second or third printer: fill **Printer 2** and **Printer 3** the same
+   way.
+8. **Language** sets the language of the feature names and texts the
+   integration creates (French by default). Feature names are set when the
+   device is added to Gladys.
 
-The **Prefer the local connection** toggle drives the demo plug: it reports
-the channel it actually uses as a badge (local or cloud), with an orange dot
-when it runs degraded (local refused, cloud fallback).
+Then add the printer from the **Discover** tab.
 
-## Actions
+## The printer device
 
-- **Test the weather provider** — performs a live request to Open-Meteo and
-  shows the current temperature and humidity under the button.
-- **Identify a device** — pick one of your devices in the list and it will
-  signal itself (the demo light "blinks" in the logs).
+One device per printer, named after the printer name set in PrusaLink, or
+its host name. The integration reads the printer every 10 seconds during a
+print and every 30 seconds otherwise (Home Assistant reads it every
+30 seconds): the printer is a small web server, it is not read more often.
 
-## Scenes
+| Feature       | What it shows                                                                                                                                                        |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| State         | Idle, Ready, Busy, Printing, Paused, Attention required, Finished, Stopped, Error, Printer unreachable, Password missing or refused                                  |
+| File          | The file being printed (its full name, `benchy.bgcode`), or "No file"                                                                                                |
+| Progress      | Percentage of the print (0 without a job)                                                                                                                            |
+| Elapsed time  | In minutes                                                                                                                                                           |
+| Time left     | Estimated by the printer, in minutes (0 when no print runs)                                                                                                          |
+| Nozzle, Bed   | Temperatures, in whole degrees                                                                                                                                       |
+| … (target)    | Setpoints, read only                                                                                                                                                 |
+| Print speed   | The speed factor set on the printer, in percent (100 % = normal)                                                                                                     |
+| Filament      | The filament type loaded (PLA, PETG…), when the printer tells it                                                                                                     |
+| Pause, Resume | Push buttons                                                                                                                                                         |
+| Camera        | The camera image, only for PrusaLink on a Raspberry Pi with a camera (the Core One and MK4 cameras send their images to Prusa Connect only, PrusaLink has no access) |
 
-The integration adds its own cards to the scene editor (Gladys 5.1 or
-later), under the **Integrations** category:
+There is deliberately no **cancel** button on the device: one tap without
+confirmation would ruin a print. Cancelling is offered by the widget (with a
+confirmation) and by the scenes. The temperatures and setpoints are read only,
+and the integration sends **no heating command at all**: a printer heater can
+never be turned on from Gladys, nor through HomeKit, Alexa or Google. They are
+"device temperatures" for Gladys, so they never count in the temperature of
+the room.
 
-- **Motion detected** (trigger) — starts the scene when a demo motion sensor
-  sees something move. Optionally pick the sensor and what moved (person,
-  animal); left empty, any detection matches. The following actions can
-  read what moved with `{{triggerEvent.data.target}}`.
-- **Identify a device** (action) — makes the chosen device signal itself.
-  It returns whether the device could signal itself, so the following
-  actions can depend on it.
+When the printer starts telling its filament type, or a camera appears,
+Gladys offers to update the device in the **Discover** tab.
 
-## Dashboard
+## Dashboard widget
 
-Add the **Demo status** widget to a dashboard: it shows the live
-temperature of the weather station and the power of the office plug, the
-connection the plug currently uses (orange when degraded) and the observed
-location. Its **Identify the light** button makes the demo light signal
-itself.
+Add the **3D printer** widget to a dashboard and pick the printer in its
+settings. It shows:
+
+- the progress gauge, the time left, the nozzle and bed temperatures (live);
+- the camera image if there is one, otherwise the thumbnail of the file being
+  printed;
+- the state, the message of the printer when something is wrong, the file,
+  the elapsed time, the time the print should end, the active setpoints, the
+  speed and the filament;
+- the buttons that fit the moment: **Pause** or **Resume** and **Cancel**
+  (asks for confirmation) during a print. When the printer requires
+  attention, only Cancel: the answer is given on the printer.
+
+## Scene triggers
+
+Under the **Integrations** category of the scene editor. Each can be limited
+to one printer.
+
+- **Print started** — variables: printer name, file.
+- **Print finished** — variables: printer name, file, print time (text, like
+  `1 h 05 min`, and in minutes).
+- **Print failed or cancelled** — can be limited to a reason (cancelled,
+  error). Variables: printer name, file, print time, reason, printer message.
+- **Print paused** — from the printer, PrusaLink, Prusa Connect or Gladys.
+  Variables: printer name, file, elapsed time.
+- **Attention required** — the printer waits for someone: filament runout, a
+  question on its screen. Variables: printer name, file, elapsed time,
+  printer message.
+- **Printer error** — the printer entered its error state, during a print or
+  not (an error during a print also fires Print failed). Variables: printer
+  name, file, elapsed time, printer message.
+
+The variables are read in the following actions with, for instance,
+`{{triggerEvent.data.file}}` and `{{triggerEvent.data.duration}}`.
+
+## Scene actions
+
+- **Pause, resume or cancel a print** — returns **Applied**: false when there
+  was nothing to pause, resume or cancel (the scene goes on). Cancelling
+  cannot be undone: choose it on purpose.
+- **Read the printer state** — returns a ready-made **Sentence** to send or
+  say ("Prusa MK4: Printing, benchy.bgcode, 37 %, 1 h 05 min left."), and the
+  values to test in the following actions: state (`printing`, `paused`,
+  `finished`…), state as shown, file, progress, time left in minutes.
+
+## Scene examples
+
+- **Print finished → notification**: trigger Print finished, action "Send a
+  message": `{{triggerEvent.data.file}} done in {{triggerEvent.data.duration}}`.
+- **Filament runout → call someone**: trigger Attention required, action "Send
+  a message": `The printer needs you: {{triggerEvent.data.message}}`.
+- **Smoke detected → stop the print**: trigger on the smoke detector, action
+  Pause, resume or cancel a print (cancel), then turn the printer's smart plug
+  off.
+- **Where is my print?**: a "Read the printer state" action, then "Send a
+  message" with its sentence, on a button or every hour during a print.
 
 ## Troubleshooting
 
-The integration logs everything it does: check the integration logs from the
-Gladys UI (or `docker logs` on the host) with `LOG_LEVEL=debug` for the full
-detail.
+- **PrusaLink does not answer**: check that PrusaLink is enabled on the
+  printer, and the address from the Gladys machine
+  (`curl http://192.168.1.60/api/version` answers 401 without password: the
+  printer is reachable). Use an IP address rather than a `.local` name.
+- **User or password refused**: copy the password again from **Settings →
+  Network → PrusaLink** (it changes if you regenerate it on the printer).
+  Leave User empty unless PrusaLink runs on a Raspberry Pi.
+- **The values move slowly**: the printer is read every 10 seconds during a
+  print, every 30 seconds otherwise. A print shorter than that may be seen
+  only when it ends.
+- **No filament type**: older firmwares do not tell it; the feature then does
+  not exist.
+- **No camera image**: only PrusaLink on a Raspberry Pi gives a camera image;
+  it must be a JPEG or PNG of about 110 KB at most (a Gladys limit).
+- Logs: in the integration page of Gladys, or `docker logs` on the host.
+  `LOG_LEVEL=debug` shows the detail. The password never appears in the logs.
+
+## Limits
+
+- Up to three printers.
+- No file upload, no print start from Gladys, no temperature or G-code
+  command, no time-lapse, no Prusa Connect (cloud).
+- The printer is read, not pushed: an event lasting less than 10 seconds may
+  be missed.
+- The XL reports a single nozzle temperature.
+- Developed without the hardware: feedback welcome.
+- Not affiliated with Prusa Research. Prusa, Original Prusa and PrusaLink are
+  trademarks of Prusa Research a.s.

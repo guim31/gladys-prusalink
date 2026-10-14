@@ -100,7 +100,6 @@
         "es": "Contraseña de PrusaLink"
       },
       "required": false,
-      "default": "",
       "description": {
         "en": "On the printer: Settings > Network > PrusaLink. Older firmwares: the API key.",
         "fr": "Sur l'imprimante : Réglages > Réseau > PrusaLink. Anciens firmwares : la clé d'API.",
@@ -176,7 +175,6 @@
         "es": "Contraseña de PrusaLink"
       },
       "required": false,
-      "default": "",
       "description": {
         "en": "On the printer: Settings > Network > PrusaLink. Older firmwares: the API key.",
         "fr": "Sur l'imprimante : Réglages > Réseau > PrusaLink. Anciens firmwares : la clé d'API.",
@@ -252,7 +250,6 @@
         "es": "Contraseña de PrusaLink"
       },
       "required": false,
-      "default": "",
       "description": {
         "en": "On the printer: Settings > Network > PrusaLink. Older firmwares: the API key.",
         "fr": "Sur l'imprimante : Réglages > Réseau > PrusaLink. Anciens firmwares : la clé d'API.",
