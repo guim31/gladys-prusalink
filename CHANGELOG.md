@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-14
+
 ### Added
 
 - Prusa 3D printers in Gladys through PrusaLink, on the local network: MK4,
@@ -30,3 +32,6 @@ the notes of the version's GitHub Release.
 - Scene actions: pause, resume or cancel a print; read the printer state as a
   ready-made sentence and values.
 - Documentation in English, French, German and Spanish.
+
+[Unreleased]: https://github.com/guim31/gladys-prusalink/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/guim31/gladys-prusalink/releases/tag/v1.0.0
