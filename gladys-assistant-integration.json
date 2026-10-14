@@ -1,177 +1,1024 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "PrusaLink",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Follow your Prusa 3D printers locally with PrusaLink: progress, temperatures, alerts.",
+    "fr": "Suivez vos imprimantes 3D Prusa en local par PrusaLink : progression, températures, alertes.",
+    "de": "Verfolge deine Prusa-3D-Drucker lokal mit PrusaLink: Fortschritt, Temperaturen, Alarme.",
+    "es": "Siga sus impresoras 3D Prusa en local con PrusaLink: progreso, temperaturas, alertas."
   },
   "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "docker_image": "ghcr.io/guim31/gladys-prusalink:1.0.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/guim31/gladys-prusalink/main/cover.png",
+  "categories": ["appliances"],
+  "transports": ["local"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Connect your Prusa printers",
+        "fr": "Connecter vos imprimantes Prusa",
+        "de": "Verbinde deine Prusa-Drucker",
+        "es": "Conecte sus impresoras Prusa"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Enable PrusaLink on the printer (Settings > Network > PrusaLink), then enter its IP address and the password it shows. Works with the MK4, MK4S, MK3.9, MK3.5, Core One, XL and MINI+ (firmware 5 or later), and the MK3S+ with PrusaLink on a Raspberry Pi. Up to three printers. Everything stays on your network.",
+        "fr": "Activez PrusaLink sur l'imprimante (Réglages > Réseau > PrusaLink), puis saisissez son adresse IP et le mot de passe qu'elle affiche. Pour les MK4, MK4S, MK3.9, MK3.5, Core One, XL et MINI+ (firmware 5 ou plus), et la MK3S+ avec PrusaLink sur Raspberry Pi. Jusqu'à trois imprimantes. Tout reste sur votre réseau.",
+        "de": "Aktiviere PrusaLink am Drucker (Einstellungen > Netzwerk > PrusaLink) und gib dann seine IP-Adresse und das angezeigte Passwort ein. Für MK4, MK4S, MK3.9, MK3.5, Core One, XL und MINI+ (Firmware 5 oder neuer) sowie den MK3S+ mit PrusaLink auf einem Raspberry Pi. Bis zu drei Drucker. Alles bleibt in deinem Netzwerk.",
+        "es": "Active PrusaLink en la impresora (Ajustes > Red > PrusaLink) e introduzca su dirección IP y la contraseña que muestra. Para MK4, MK4S, MK3.9, MK3.5, Core One, XL y MINI+ (firmware 5 o posterior), y la MK3S+ con PrusaLink en una Raspberry Pi. Hasta tres impresoras. Todo se queda en su red."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://help.prusa3d.com/article/prusa-connect-and-prusalink-explained_302608",
+          "label": {
+            "en": "PrusaLink, by Prusa Research",
+            "fr": "PrusaLink, par Prusa Research",
+            "de": "PrusaLink von Prusa Research",
+            "es": "PrusaLink, de Prusa Research"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "url_1",
+      "type": "string",
+      "label": {
+        "en": "Printer address",
+        "fr": "Adresse de l'imprimante",
+        "de": "Druckeradresse",
+        "es": "Dirección de la impresora"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
+      "placeholder": {
+        "en": "e.g. 192.168.1.60",
+        "fr": "ex. 192.168.1.60",
+        "de": "z. B. 192.168.1.60",
+        "es": "p. ej. 192.168.1.60"
+      },
       "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "default": "",
+      "description": {
+        "en": "The IP address shown on the printer (Settings > Network). A port is allowed (192.168.1.60:8080).",
+        "fr": "L'adresse IP affichée par l'imprimante (Réglages > Réseau). Un port est accepté (192.168.1.60:8080).",
+        "de": "Die IP-Adresse, die der Drucker anzeigt (Einstellungen > Netzwerk). Ein Port ist möglich (192.168.1.60:8080).",
+        "es": "La dirección IP que muestra la impresora (Ajustes > Red). Se admite un puerto (192.168.1.60:8080)."
+      }
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "username_1",
+      "type": "string",
+      "label": {
+        "en": "User",
+        "fr": "Utilisateur",
+        "de": "Benutzer",
+        "es": "Usuario"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "placeholder": {
+        "en": "maker",
+        "fr": "maker",
+        "de": "maker",
+        "es": "maker"
+      },
+      "required": false,
+      "default": "",
+      "description": {
+        "en": "Leave empty for maker, the user of every printer with PrusaLink built in.",
+        "fr": "Laissez vide pour maker, l'utilisateur de toute imprimante à PrusaLink intégré.",
+        "de": "Leer lassen für maker, den Benutzer jedes Druckers mit eingebautem PrusaLink.",
+        "es": "Déjelo vacío para maker, el usuario de toda impresora con PrusaLink integrado."
+      }
     },
     {
-      "key": "unit",
+      "key": "password_1",
+      "type": "secret",
+      "label": {
+        "en": "PrusaLink password",
+        "fr": "Mot de passe PrusaLink",
+        "de": "PrusaLink-Passwort",
+        "es": "Contraseña de PrusaLink"
+      },
+      "required": false,
+      "default": "",
+      "description": {
+        "en": "On the printer: Settings > Network > PrusaLink. Older firmwares: the API key.",
+        "fr": "Sur l'imprimante : Réglages > Réseau > PrusaLink. Anciens firmwares : la clé d'API.",
+        "de": "Am Drucker: Einstellungen > Netzwerk > PrusaLink. Ältere Firmware: der API-Schlüssel.",
+        "es": "En la impresora: Ajustes > Red > PrusaLink. Firmwares antiguos: la clave de API."
+      }
+    },
+    {
+      "key": "section_2",
+      "type": "section",
+      "label": {
+        "en": "Printer 2 (optional)",
+        "fr": "Imprimante 2 (facultatif)",
+        "de": "Drucker 2 (optional)",
+        "es": "Impresora 2 (opcional)"
+      }
+    },
+    {
+      "key": "url_2",
+      "type": "string",
+      "label": {
+        "en": "Printer address",
+        "fr": "Adresse de l'imprimante",
+        "de": "Druckeradresse",
+        "es": "Dirección de la impresora"
+      },
+      "placeholder": {
+        "en": "e.g. 192.168.1.60",
+        "fr": "ex. 192.168.1.60",
+        "de": "z. B. 192.168.1.60",
+        "es": "p. ej. 192.168.1.60"
+      },
+      "required": false,
+      "default": "",
+      "description": {
+        "en": "The IP address shown on the printer (Settings > Network). A port is allowed (192.168.1.60:8080).",
+        "fr": "L'adresse IP affichée par l'imprimante (Réglages > Réseau). Un port est accepté (192.168.1.60:8080).",
+        "de": "Die IP-Adresse, die der Drucker anzeigt (Einstellungen > Netzwerk). Ein Port ist möglich (192.168.1.60:8080).",
+        "es": "La dirección IP que muestra la impresora (Ajustes > Red). Se admite un puerto (192.168.1.60:8080)."
+      }
+    },
+    {
+      "key": "username_2",
+      "type": "string",
+      "label": {
+        "en": "User",
+        "fr": "Utilisateur",
+        "de": "Benutzer",
+        "es": "Usuario"
+      },
+      "placeholder": {
+        "en": "maker",
+        "fr": "maker",
+        "de": "maker",
+        "es": "maker"
+      },
+      "required": false,
+      "default": "",
+      "description": {
+        "en": "Leave empty for maker, the user of every printer with PrusaLink built in.",
+        "fr": "Laissez vide pour maker, l'utilisateur de toute imprimante à PrusaLink intégré.",
+        "de": "Leer lassen für maker, den Benutzer jedes Druckers mit eingebautem PrusaLink.",
+        "es": "Déjelo vacío para maker, el usuario de toda impresora con PrusaLink integrado."
+      }
+    },
+    {
+      "key": "password_2",
+      "type": "secret",
+      "label": {
+        "en": "PrusaLink password",
+        "fr": "Mot de passe PrusaLink",
+        "de": "PrusaLink-Passwort",
+        "es": "Contraseña de PrusaLink"
+      },
+      "required": false,
+      "default": "",
+      "description": {
+        "en": "On the printer: Settings > Network > PrusaLink. Older firmwares: the API key.",
+        "fr": "Sur l'imprimante : Réglages > Réseau > PrusaLink. Anciens firmwares : la clé d'API.",
+        "de": "Am Drucker: Einstellungen > Netzwerk > PrusaLink. Ältere Firmware: der API-Schlüssel.",
+        "es": "En la impresora: Ajustes > Red > PrusaLink. Firmwares antiguos: la clave de API."
+      }
+    },
+    {
+      "key": "section_3",
+      "type": "section",
+      "label": {
+        "en": "Printer 3 (optional)",
+        "fr": "Imprimante 3 (facultatif)",
+        "de": "Drucker 3 (optional)",
+        "es": "Impresora 3 (opcional)"
+      }
+    },
+    {
+      "key": "url_3",
+      "type": "string",
+      "label": {
+        "en": "Printer address",
+        "fr": "Adresse de l'imprimante",
+        "de": "Druckeradresse",
+        "es": "Dirección de la impresora"
+      },
+      "placeholder": {
+        "en": "e.g. 192.168.1.60",
+        "fr": "ex. 192.168.1.60",
+        "de": "z. B. 192.168.1.60",
+        "es": "p. ej. 192.168.1.60"
+      },
+      "required": false,
+      "default": "",
+      "description": {
+        "en": "The IP address shown on the printer (Settings > Network). A port is allowed (192.168.1.60:8080).",
+        "fr": "L'adresse IP affichée par l'imprimante (Réglages > Réseau). Un port est accepté (192.168.1.60:8080).",
+        "de": "Die IP-Adresse, die der Drucker anzeigt (Einstellungen > Netzwerk). Ein Port ist möglich (192.168.1.60:8080).",
+        "es": "La dirección IP que muestra la impresora (Ajustes > Red). Se admite un puerto (192.168.1.60:8080)."
+      }
+    },
+    {
+      "key": "username_3",
+      "type": "string",
+      "label": {
+        "en": "User",
+        "fr": "Utilisateur",
+        "de": "Benutzer",
+        "es": "Usuario"
+      },
+      "placeholder": {
+        "en": "maker",
+        "fr": "maker",
+        "de": "maker",
+        "es": "maker"
+      },
+      "required": false,
+      "default": "",
+      "description": {
+        "en": "Leave empty for maker, the user of every printer with PrusaLink built in.",
+        "fr": "Laissez vide pour maker, l'utilisateur de toute imprimante à PrusaLink intégré.",
+        "de": "Leer lassen für maker, den Benutzer jedes Druckers mit eingebautem PrusaLink.",
+        "es": "Déjelo vacío para maker, el usuario de toda impresora con PrusaLink integrado."
+      }
+    },
+    {
+      "key": "password_3",
+      "type": "secret",
+      "label": {
+        "en": "PrusaLink password",
+        "fr": "Mot de passe PrusaLink",
+        "de": "PrusaLink-Passwort",
+        "es": "Contraseña de PrusaLink"
+      },
+      "required": false,
+      "default": "",
+      "description": {
+        "en": "On the printer: Settings > Network > PrusaLink. Older firmwares: the API key.",
+        "fr": "Sur l'imprimante : Réglages > Réseau > PrusaLink. Anciens firmwares : la clé d'API.",
+        "de": "Am Drucker: Einstellungen > Netzwerk > PrusaLink. Ältere Firmware: der API-Schlüssel.",
+        "es": "En la impresora: Ajustes > Red > PrusaLink. Firmwares antiguos: la clave de API."
+      }
+    },
+    {
+      "key": "section_options",
+      "type": "section",
+      "label": {
+        "en": "Options",
+        "fr": "Options",
+        "de": "Optionen",
+        "es": "Opciones"
+      },
+      "description": {
+        "en": "Language of the names and texts the integration creates (feature names are set when a device is added).",
+        "fr": "Langue des noms et textes créés par l'intégration (les noms des fonctionnalités sont fixés à l'ajout de l'appareil).",
+        "de": "Sprache der Namen und Texte, die die Integration erzeugt (Funktionsnamen werden beim Hinzufügen des Geräts festgelegt).",
+        "es": "Idioma de los nombres y textos que crea la integración (los nombres de las funciones se fijan al añadir el dispositivo)."
+      }
+    },
+    {
+      "key": "language",
       "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
-      "required": false,
-      "default": "celsius",
-      "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
-      ]
-    },
-    {
-      "key": "poll_frequency",
-      "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
-      "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+      "label": {
+        "en": "Language",
+        "fr": "Langue",
+        "de": "Sprache",
+        "es": "Idioma"
       },
       "required": false,
-      "default": 300,
-      "min": 60,
-      "max": 3600
+      "default": "fr",
+      "options": [
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais",
+            "de": "Englisch",
+            "es": "Inglés"
+          }
+        },
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français",
+            "de": "Französisch",
+            "es": "Francés"
+          }
+        },
+        {
+          "value": "de",
+          "label": {
+            "en": "German",
+            "fr": "Allemand",
+            "de": "Deutsch",
+            "es": "Alemán"
+          }
+        },
+        {
+          "value": "es",
+          "label": {
+            "en": "Spanish",
+            "fr": "Espagnol",
+            "de": "Spanisch",
+            "es": "Español"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion",
+        "de": "Verbindung testen",
+        "es": "Probar la conexión"
+      },
       "timeout_seconds": 30
-    },
-    {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "fields": [
-        {
-          "key": "device",
-          "type": "select",
-          "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
-        }
-      ]
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "print_started",
+      "label": {
+        "en": "Print started",
+        "fr": "Impression démarrée",
+        "de": "Druck gestartet",
+        "es": "Impresión iniciada"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "A print job started on the printer.",
+        "fr": "Une impression a démarré sur l'imprimante.",
+        "de": "Ein Druckauftrag wurde auf dem Drucker gestartet.",
+        "es": "Se ha iniciado una impresión en la impresora."
       },
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "printer",
+          "type": "string",
+          "label": {
+            "en": "Printer name",
+            "fr": "Nom de l'imprimante",
+            "de": "Druckername",
+            "es": "Nombre de la impresora"
+          }
         },
         {
-          "key": "target",
+          "key": "file",
+          "type": "string",
+          "label": {
+            "en": "File",
+            "fr": "Fichier",
+            "de": "Datei",
+            "es": "Archivo"
+          }
+        }
+      ]
+    },
+    {
+      "key": "print_done",
+      "label": {
+        "en": "Print finished",
+        "fr": "Impression terminée",
+        "de": "Druck fertig",
+        "es": "Impresión terminada"
+      },
+      "description": {
+        "en": "A print job finished successfully.",
+        "fr": "Une impression s'est terminée avec succès.",
+        "de": "Ein Druckauftrag wurde erfolgreich beendet.",
+        "es": "Una impresión ha terminado correctamente."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "printer",
+          "type": "string",
+          "label": {
+            "en": "Printer name",
+            "fr": "Nom de l'imprimante",
+            "de": "Druckername",
+            "es": "Nombre de la impresora"
+          }
+        },
+        {
+          "key": "file",
+          "type": "string",
+          "label": {
+            "en": "File",
+            "fr": "Fichier",
+            "de": "Datei",
+            "es": "Archivo"
+          }
+        },
+        {
+          "key": "duration",
+          "type": "string",
+          "label": {
+            "en": "Print time",
+            "fr": "Durée d'impression",
+            "de": "Druckdauer",
+            "es": "Tiempo de impresión"
+          }
+        },
+        {
+          "key": "duration_minutes",
+          "type": "number",
+          "label": {
+            "en": "Print time (minutes)",
+            "fr": "Durée d'impression (minutes)",
+            "de": "Druckdauer (Minuten)",
+            "es": "Tiempo de impresión (minutos)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "print_failed",
+      "label": {
+        "en": "Print failed or cancelled",
+        "fr": "Impression échouée ou annulée",
+        "de": "Druck fehlgeschlagen oder abgebrochen",
+        "es": "Impresión fallida o cancelada"
+      },
+      "description": {
+        "en": "A print job stopped before its end: cancelled, or an error of the printer.",
+        "fr": "Une impression s'est arrêtée avant la fin : annulée, ou erreur de l'imprimante.",
+        "de": "Ein Druckauftrag endete vorzeitig: abgebrochen oder Druckerfehler.",
+        "es": "Una impresión se ha detenido antes de terminar: cancelada o error de la impresora."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          }
+        },
+        {
+          "key": "reason",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "label": {
+            "en": "Reason",
+            "fr": "Raison",
+            "de": "Grund",
+            "es": "Motivo"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "cancelled",
+              "label": {
+                "en": "Cancelled",
+                "fr": "Annulée",
+                "de": "Abgebrochen",
+                "es": "Cancelada"
+              }
+            },
+            {
+              "value": "error",
+              "label": {
+                "en": "Error",
+                "fr": "Erreur",
+                "de": "Fehler",
+                "es": "Error"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "printer",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "Printer name",
+            "fr": "Nom de l'imprimante",
+            "de": "Druckername",
+            "es": "Nombre de la impresora"
+          }
+        },
+        {
+          "key": "file",
+          "type": "string",
+          "label": {
+            "en": "File",
+            "fr": "Fichier",
+            "de": "Datei",
+            "es": "Archivo"
+          }
+        },
+        {
+          "key": "duration",
+          "type": "string",
+          "label": {
+            "en": "Print time",
+            "fr": "Durée d'impression",
+            "de": "Druckdauer",
+            "es": "Tiempo de impresión"
+          }
+        },
+        {
+          "key": "duration_minutes",
+          "type": "number",
+          "label": {
+            "en": "Print time (minutes)",
+            "fr": "Durée d'impression (minutes)",
+            "de": "Druckdauer (Minuten)",
+            "es": "Tiempo de impresión (minutos)"
+          }
+        },
+        {
+          "key": "reason",
+          "type": "string",
+          "label": {
+            "en": "Reason (cancelled or error)",
+            "fr": "Raison (cancelled ou error)",
+            "de": "Grund (cancelled oder error)",
+            "es": "Motivo (cancelled o error)"
+          }
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "Printer message",
+            "fr": "Message de l'imprimante",
+            "de": "Druckermeldung",
+            "es": "Mensaje de la impresora"
+          }
+        }
+      ]
+    },
+    {
+      "key": "print_paused",
+      "label": {
+        "en": "Print paused",
+        "fr": "Impression en pause",
+        "de": "Druck pausiert",
+        "es": "Impresión en pausa"
+      },
+      "description": {
+        "en": "A print job was paused, from the printer, PrusaLink, Prusa Connect or Gladys.",
+        "fr": "Une impression a été mise en pause, depuis l'imprimante, PrusaLink, Prusa Connect ou Gladys.",
+        "de": "Ein Druckauftrag wurde pausiert, am Drucker, in PrusaLink, Prusa Connect oder Gladys.",
+        "es": "Una impresión se ha pausado, desde la impresora, PrusaLink, Prusa Connect o Gladys."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "printer",
+          "type": "string",
+          "label": {
+            "en": "Printer name",
+            "fr": "Nom de l'imprimante",
+            "de": "Druckername",
+            "es": "Nombre de la impresora"
+          }
+        },
+        {
+          "key": "file",
+          "type": "string",
+          "label": {
+            "en": "File",
+            "fr": "Fichier",
+            "de": "Datei",
+            "es": "Archivo"
+          }
+        },
+        {
+          "key": "duration",
+          "type": "string",
+          "label": {
+            "en": "Elapsed time",
+            "fr": "Temps écoulé",
+            "de": "Verstrichene Zeit",
+            "es": "Tiempo transcurrido"
+          }
+        },
+        {
+          "key": "duration_minutes",
+          "type": "number",
+          "label": {
+            "en": "Elapsed time (minutes)",
+            "fr": "Temps écoulé (minutes)",
+            "de": "Verstrichene Zeit (Minuten)",
+            "es": "Tiempo transcurrido (minutos)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "attention_required",
+      "label": {
+        "en": "Attention required",
+        "fr": "Intervention requise",
+        "de": "Eingriff nötig",
+        "es": "Intervención necesaria"
+      },
+      "description": {
+        "en": "The printer waits for someone: filament runout, a question on its screen.",
+        "fr": "L'imprimante attend quelqu'un : fin de filament, question sur son écran.",
+        "de": "Der Drucker wartet auf jemanden: Filamentende, eine Frage auf dem Display.",
+        "es": "La impresora espera a alguien: fin del filamento, una pregunta en su pantalla."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "printer",
+          "type": "string",
+          "label": {
+            "en": "Printer name",
+            "fr": "Nom de l'imprimante",
+            "de": "Druckername",
+            "es": "Nombre de la impresora"
+          }
+        },
+        {
+          "key": "file",
+          "type": "string",
+          "label": {
+            "en": "File",
+            "fr": "Fichier",
+            "de": "Datei",
+            "es": "Archivo"
+          }
+        },
+        {
+          "key": "duration",
+          "type": "string",
+          "label": {
+            "en": "Elapsed time",
+            "fr": "Temps écoulé",
+            "de": "Verstrichene Zeit",
+            "es": "Tiempo transcurrido"
+          }
+        },
+        {
+          "key": "duration_minutes",
+          "type": "number",
+          "label": {
+            "en": "Elapsed time (minutes)",
+            "fr": "Temps écoulé (minutes)",
+            "de": "Verstrichene Zeit (Minuten)",
+            "es": "Tiempo transcurrido (minutos)"
+          }
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "Printer message",
+            "fr": "Message de l'imprimante",
+            "de": "Druckermeldung",
+            "es": "Mensaje de la impresora"
+          }
+        }
+      ]
+    },
+    {
+      "key": "printer_error",
+      "label": {
+        "en": "Printer error",
+        "fr": "Erreur de l'imprimante",
+        "de": "Druckerfehler",
+        "es": "Error de la impresora"
+      },
+      "description": {
+        "en": "The printer entered its error state, during a print or not.",
+        "fr": "L'imprimante est passée en erreur, pendant une impression ou non.",
+        "de": "Der Drucker ist in den Fehlerzustand gewechselt, mit oder ohne Druck.",
+        "es": "La impresora ha pasado a estado de error, durante una impresión o no."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "printer",
+          "type": "string",
+          "label": {
+            "en": "Printer name",
+            "fr": "Nom de l'imprimante",
+            "de": "Druckername",
+            "es": "Nombre de la impresora"
+          }
+        },
+        {
+          "key": "file",
+          "type": "string",
+          "label": {
+            "en": "File",
+            "fr": "Fichier",
+            "de": "Datei",
+            "es": "Archivo"
+          }
+        },
+        {
+          "key": "duration",
+          "type": "string",
+          "label": {
+            "en": "Elapsed time",
+            "fr": "Temps écoulé",
+            "de": "Verstrichene Zeit",
+            "es": "Tiempo transcurrido"
+          }
+        },
+        {
+          "key": "duration_minutes",
+          "type": "number",
+          "label": {
+            "en": "Elapsed time (minutes)",
+            "fr": "Temps écoulé (minutes)",
+            "de": "Verstrichene Zeit (Minuten)",
+            "es": "Tiempo transcurrido (minutos)"
+          }
+        },
+        {
+          "key": "message",
+          "type": "string",
+          "label": {
+            "en": "Printer message",
+            "fr": "Message de l'imprimante",
+            "de": "Druckermeldung",
+            "es": "Mensaje de la impresora"
+          }
         }
       ]
     }
   ],
   "scene_actions": [
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "control_print",
+      "label": {
+        "en": "Pause, resume or cancel a print",
+        "fr": "Mettre en pause, reprendre ou annuler une impression",
+        "de": "Druck pausieren, fortsetzen oder abbrechen",
+        "es": "Pausar, reanudar o cancelar una impresión"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "Applied: false when there is nothing to pause, resume or cancel. Cancelling cannot be undone.",
+        "fr": "Appliqué : faux quand il n'y a rien à mettre en pause, reprendre ou annuler. Une annulation est définitive.",
+        "de": "Ausgeführt: falsch, wenn nichts zu pausieren, fortzusetzen oder abzubrechen ist. Ein Abbruch ist endgültig.",
+        "es": "Aplicado: falso cuando no hay nada que pausar, reanudar o cancelar. Una cancelación es definitiva."
+      },
+      "timeout_seconds": 20,
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          },
+          "required": true
+        },
+        {
+          "key": "command",
+          "type": "select",
+          "label": {
+            "en": "Command",
+            "fr": "Commande",
+            "de": "Befehl",
+            "es": "Comando"
+          },
+          "required": true,
+          "default": "pause",
+          "options": [
+            {
+              "value": "pause",
+              "label": {
+                "en": "Pause",
+                "fr": "Mettre en pause",
+                "de": "Pausieren",
+                "es": "Pausar"
+              }
+            },
+            {
+              "value": "resume",
+              "label": {
+                "en": "Resume",
+                "fr": "Reprendre",
+                "de": "Fortsetzen",
+                "es": "Reanudar"
+              }
+            },
+            {
+              "value": "cancel",
+              "label": {
+                "en": "Cancel the print (final)",
+                "fr": "Annuler l'impression (définitif)",
+                "de": "Druck abbrechen (endgültig)",
+                "es": "Cancelar la impresión (definitivo)"
+              }
+            }
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "key": "applied",
+          "type": "boolean",
+          "label": {
+            "en": "Applied",
+            "fr": "Appliqué",
+            "de": "Ausgeführt",
+            "es": "Aplicado"
+          }
+        }
+      ]
+    },
+    {
+      "key": "get_status",
+      "label": {
+        "en": "Read the printer state",
+        "fr": "Lire l'état de l'imprimante",
+        "de": "Druckerstatus lesen",
+        "es": "Leer el estado de la impresora"
+      },
+      "description": {
+        "en": "A sentence to send or say (\"Prusa: Printing, benchy.bgcode, 37 %, 1 h 05 min left.\"), and the values to test.",
+        "fr": "Une phrase à envoyer ou à dire (« Prusa : Impression, benchy.bgcode, 37 %, encore 1 h 05 min. »), et les valeurs à tester.",
+        "de": "Ein Satz zum Senden oder Vorlesen („Prusa: Druckt, benchy.bgcode, 37 %, noch 1 Std. 05 Min.“) und die Werte zum Prüfen.",
+        "es": "Una frase para enviar o decir («Prusa: Imprimiendo, benchy.bgcode, 37 %, quedan 1 h 05 min.») y los valores para comprobar."
+      },
+      "timeout_seconds": 10,
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          },
           "required": true
         }
       ],
       "outputs": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "sentence",
+          "type": "string",
+          "label": {
+            "en": "Sentence",
+            "fr": "Phrase",
+            "de": "Satz",
+            "es": "Frase"
+          }
+        },
+        {
+          "key": "state",
+          "type": "string",
+          "label": {
+            "en": "State (printing, paused, finished…)",
+            "fr": "État (printing, paused, finished…)",
+            "de": "Status (printing, paused, finished…)",
+            "es": "Estado (printing, paused, finished…)"
+          }
+        },
+        {
+          "key": "state_label",
+          "type": "string",
+          "label": {
+            "en": "State, as shown",
+            "fr": "État, tel qu'affiché",
+            "de": "Status, wie angezeigt",
+            "es": "Estado, tal como se muestra"
+          }
+        },
+        {
+          "key": "file",
+          "type": "string",
+          "label": {
+            "en": "File",
+            "fr": "Fichier",
+            "de": "Datei",
+            "es": "Archivo"
+          }
+        },
+        {
+          "key": "progress",
+          "type": "number",
+          "label": {
+            "en": "Progress (%)",
+            "fr": "Progression (%)",
+            "de": "Fortschritt (%)",
+            "es": "Progreso (%)"
+          }
+        },
+        {
+          "key": "time_left_minutes",
+          "type": "number",
+          "label": {
+            "en": "Time left (minutes)",
+            "fr": "Temps restant (minutes)",
+            "de": "Restzeit (Minuten)",
+            "es": "Tiempo restante (minutos)"
+          }
         }
       ]
     }
   ],
   "widgets": [
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "printer",
+      "label": {
+        "en": "3D printer",
+        "fr": "Imprimante 3D",
+        "de": "3D-Drucker",
+        "es": "Impresora 3D"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "Progress, time left, temperatures, camera or preview, and pause, resume or cancel.",
+        "fr": "Progression, temps restant, températures, caméra ou aperçu, et pause, reprise ou annulation.",
+        "de": "Fortschritt, Restzeit, Temperaturen, Kamera oder Vorschau, Pause, Fortsetzen, Abbruch.",
+        "es": "Progreso, tiempo restante, temperaturas, cámara o vista previa, y pausa, reanudación o cancelación."
+      },
+      "icon": "printer",
+      "action_timeout_seconds": 20,
+      "settings": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Printer",
+            "fr": "Imprimante",
+            "de": "Drucker",
+            "es": "Impresora"
+          },
+          "required": true
+        }
+      ]
     }
   ]
 }
