@@ -16,12 +16,13 @@ its only runtime dependency. It started from the official JavaScript template.
 ```bash
 npm install
 npm test                                  # node --test, the built-in runner
-node --test test/devices.test.js          # one file
-node --test --test-name-pattern "plug"    # tests whose name matches
+node --test test/hub.test.js              # one file
+node --test --test-name-pattern "digest"  # tests whose name matches
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
 npm run format                            # Prettier, fix in place
 npx github:GladysAssistant/integration-store .   # store admission checks
+node tools/simulator.js                   # a simulated printer on :8080 (try the container)
 ```
 
 The CI (`.github/workflows/ci.yml`) runs `format:check`, `lint` and `test` on
@@ -31,16 +32,23 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
+index.js                          SDK wiring only: src/app.js registers the handlers before connect()
+src/app.js                        every SDK handler -> the hub (also used by the tests)
+src/hub.js                        printers, devices, states, connection status, scene events, images
+src/printer.js                    one printer: reading loop (own timer), print events, commands
+src/devices.js                    printer -> Gladys device, snapshot -> feature states
+src/prusalink/client.js           HTTP client: digest (firmware quirks), X-Api-Key fallback, error kinds
+src/prusalink/model.js            reading /api/v1/status, /api/v1/job, /api/printer; print events
 src/scenes.js                     scene action handlers (manifest `scene_actions`)
 src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+src/texts.js                      every text produced by the container, in four languages
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+src/store.js                      /data/prusalink-state.json (name, filament, camera of each printer)
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+                                  and helpers/fakePrusaLink.js (a real HTTP server, digest included)
+tools/simulator.js                the same simulator on the network, for the container
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,10 +78,12 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: action
+  messages, widget texts, feature names, manifest texts, and
+  `docs/{en,fr,de,es}.md`, kept in sync (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
-  in English. Tests never touch the network.
+  in English. Tests never leave the machine: the simulated printers listen on
+  127.0.0.1.
 
 ---
 
@@ -233,3 +243,47 @@ long, et sur un « Sie »/« Ihr… » de politesse en allemand. Le store exige 
 - Docs `en`, `fr`, `de`, `es` avec les mêmes sections.
 - Chauffe, ouverture, sécurité : ne rien rendre pilotable « comme un thermostat » ou par un assistant
   vocal quand une erreur serait dangereuse (leçon d'OctoPrint).
+
+## PrusaLink (appris sur cette intégration)
+
+Développée **sans imprimante** : formes de réponses tirées de l'intégration Home Assistant `prusalink` et de
+pyprusalink (Apache-2.0), de l'OpenAPI de Prusa-Link-Web (GPL : faits seulement) et du code du firmware
+(Prusa-Firmware-Buddy, `lib/WUI/nhttp`). Rien n'a été vérifié sur une vraie imprimante : le dire.
+
+- **Digest du firmware** : `WWW-Authenticate: Digest realm="Printer API", nonce="<16 hex>", stale=false`, sans
+  `qop` ; utilisateur fixé à `maker` (`PRUSA_LINK_USERNAME`) ; nonce valable **300 s**, puis `stale=true` si la
+  réponse était juste (refaire le calcul avec le nouveau nonce), `stale=false` si le mot de passe est faux.
+  Les firmwares avant 5.2 refusent un en-tête qui contient `algorithm` sans `qop` (contournement de
+  pyprusalink, repris). PrusaLink sur Raspberry Pi peut demander `qop="auth"`. Le firmware accepte aussi
+  `X-Api-Key` (et répond `WWW-Authenticate: ApiKey realm=...` s'il est faux) : on essaie le même secret en clé
+  après un digest refusé, et on garde le mode qui marche.
+- **`/api/v1/status`** suffit à chaque cycle : `printer.state` parmi IDLE, BUSY, PRINTING, PAUSED, FINISHED,
+  STOPPED, ERROR, ATTENTION, READY (un état inconnu est lu `busy`) ; tout le reste est facultatif. `job` (id,
+  progress, time_remaining, time_printing) n'existe que s'il y a un travail. `/api/v1/job` répond **204** sans
+  travail ; le nom (`file.display_name`) et la vignette (`file.refs.thumbnail`, PNG servi avec le même digest)
+  n'y sont lus qu'une fois par id de travail. `/api/printer` (ancienne API) donne `telemetry.material`
+  (« --- » sans filament), lu une fois par minute ; un 404 retire la fonctionnalité filament.
+- **ATTENTION** veut dire « l'imprimante attend quelqu'un » (fin de filament, question à l'écran, capture de
+  timelapse selon HA) : dans un travail, c'est encore une impression ; elle se règle sur l'imprimante, d'où un
+  widget sans bouton Reprendre dans cet état.
+- **Caméra** : `/api/v1/cameras/snap` (PNG, 204 sans image) n'existe qu'avec PrusaLink sur Raspberry Pi ; sa
+  présence se lit dans `status.camera.id` ou `info.active_camera`. Les caméras de Core One/MK4 ne passent que
+  par Prusa Connect (hypothèse non vérifiée sur le matériel).
+- **Choix de conception** (14/10/2026) : identité = numéro d'emplacement (le numéro de série manque parfois dans
+  `/api/v1/info`) ; mêmes couples et même doctrine de sécurité qu'OctoPrint (températures en
+  `device-temperature-sensor/decimal` lecture seule, **aucune commande de chauffe**, pas d'annulation sur
+  l'appareil) ; vitesse en `counter-sensor/integer` %, filament en `text/text`. Lecture par le conteneur toutes
+  les 10 s en impression, 30 s sinon, plus une relecture 1,5 s après une commande. Pas de fonctionnalité « en
+  ligne » : l'état « Imprimante injoignable » et le statut de connexion la remplacent. Une erreur pendant une
+  impression déclenche `print_failed` (raison `error`) **et** `printer_error`.
+- **Piège du lanceur de tests** : `node --test` sans argument exécute **tous** les `.js` de `test/`, helpers
+  compris ; un helper avec un point d'entrée autonome bloque la suite. Le simulateur réseau vit donc dans
+  `tools/`.
+- **Piège du SDK (camera)** : `publishCameraImage(deviceExternalId, image)` attend l'`external_id` de
+  l'**appareil** ; le cœur (`saveCameraImage`) cherche l'appareil puis sa fonctionnalité `camera/image`. Lui
+  passer l'identifiant de la fonctionnalité donne un 404 `CAMERA_NOT_FOUND` (relevé par la relecture du
+  14/10/2026 ; gladys-octoprint, gladys-moonraker et gladys-bambulab ont la même erreur). Un test lit
+  `gladys.fake.cameraImages[0].device_external_id`.
+- **Clé d'API** : jamais essayée après un digest refusé (elle partirait en clair) ; seulement sans défi
+  digest (ou avec un défi `ApiKey`), une fois par client. Statut de connexion : connecté dès qu'une imprimante
+  répond, avec le message des autres.

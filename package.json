@@ -1,8 +1,8 @@
 {
-  "name": "gladys-integration-template-js",
+  "name": "gladys-prusalink",
   "version": "1.0.0",
   "private": true,
-  "description": "Official starter template to build an external integration for Gladys Assistant with the JavaScript SDK.",
+  "description": "PrusaLink integration for Gladys Assistant: follow Prusa 3D printers locally.",
   "type": "module",
   "main": "index.js",
   "scripts": {

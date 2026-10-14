@@ -30,6 +30,18 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration holds:
+
+- the PrusaLink passwords (or API keys), in the Gladys configuration (`secret`
+  fields, never sent back to the browser by Gladys) — never in `/data`, never
+  in the logs. HTTP Digest authentication sends a hash of the password, not
+  the password itself; the API key of an older firmware is sent as a header;
+- `/data/prusalink-state.json`: what each configured printer has (name,
+  filament type, camera), no secret;
+- network: HTTP(S) requests to the printer addresses the administrator
+  entered, on the local network. No other outbound connection, no cloud.
+  Redirects are not followed, so a password is never sent to another address.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and the printers and PrusaLink themselves (Prusa Research).

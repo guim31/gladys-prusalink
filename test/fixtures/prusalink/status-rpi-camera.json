@@ -1,0 +1,16 @@
+{
+  "printer": {
+    "state": "READY",
+    "temp_nozzle": 24.5,
+    "target_nozzle": 0.0,
+    "temp_bed": 23.8,
+    "target_bed": 0.0,
+    "axis_z": 10.0,
+    "flow": 100,
+    "speed": 100,
+    "status_printer": { "ok": true, "message": "OK" },
+    "status_connect": { "ok": false, "message": "Not linked" }
+  },
+  "storage": { "name": "LOCAL", "path": "/local", "read_only": false },
+  "camera": { "id": "Ba1kmCbifTa8X" }
+}
