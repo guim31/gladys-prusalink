@@ -139,6 +139,7 @@ export class FakePrusaLink {
       return null;
     }
     if (this.auth === 'apikey') {
+      res.setHeader('WWW-Authenticate', `ApiKey realm="${REALM}"`);
       return null;
     }
     const params = parseAuthorization(req.headers.authorization);
@@ -187,7 +188,12 @@ export class FakePrusaLink {
       return;
     }
     const auth = this.#authenticate(req, res);
-    this.requests.push({ method: req.method, path: req.url, auth });
+    this.requests.push({
+      method: req.method,
+      path: req.url,
+      auth,
+      apiKey: req.headers['x-api-key'] !== undefined,
+    });
     if (!auth) {
       this.#send(res, 401, { title: 'Unauthorized' });
       return;

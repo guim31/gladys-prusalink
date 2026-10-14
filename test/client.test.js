@@ -78,13 +78,44 @@ test('one challenge, then every request reuses the nonce', async (t) => {
   assert.equal(await client.getJson('/api/v1/job'), null, '204 without job');
 });
 
-test('a wrong password ends as unauthorized after one API key attempt', async (t) => {
+test('a wrong password is unauthorized, and never sent in clear as an API key', async (t) => {
   const fake = new FakePrusaLink();
   const url = await fake.start();
   t.after(() => fake.stop());
   const client = new PrusaLinkClient({ baseUrl: url, password: 'wrong' });
+  for (let i = 0; i < 3; i += 1) {
+    await assert.rejects(client.getJson('/api/v1/status'), { kind: 'unauthorized' });
+  }
+  assert.ok(fake.requests.every((r) => !r.apiKey));
+});
+
+test('an API key is tried once, and only without a digest challenge', async (t) => {
+  const fake = new FakePrusaLink({ auth: 'apikey' });
+  const url = await fake.start();
+  t.after(() => fake.stop());
+  const client = new PrusaLinkClient({ baseUrl: url, password: 'wrong' });
+  for (let i = 0; i < 3; i += 1) {
+    await assert.rejects(client.getJson('/api/v1/status'), { kind: 'unauthorized' });
+  }
+  assert.equal(fake.requests.filter((r) => r.apiKey).length, 1);
+});
+
+test('a host asking for Basic auth never receives the password', async (t) => {
+  const { createServer } = await import('node:http');
+  const seen = [];
+  const server = createServer((req, res) => {
+    seen.push(req.headers);
+    res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="router"' });
+    res.end();
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const client = new PrusaLinkClient({
+    baseUrl: `http://127.0.0.1:${server.address().port}`,
+    password: PASSWORD,
+  });
   await assert.rejects(client.getJson('/api/v1/status'), { kind: 'unauthorized' });
-  assert.equal(fake.requests.length, 3);
+  assert.ok(seen.every((headers) => !JSON.stringify(headers).includes(PASSWORD)));
 });
 
 test('errors are sorted, and never carry the password', async (t) => {

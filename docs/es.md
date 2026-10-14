@@ -175,6 +175,9 @@ Las variables se leen en las acciones siguientes con, por ejemplo,
 - Hasta tres impresoras.
 - Sin envío de archivos, sin inicio de impresión desde Gladys, sin órdenes de
   temperatura ni de G-code, sin timelapse, sin Prusa Connect (nube).
+- Una impresión que vuelve a En reposo o Lista sin pasar por Terminada o
+  Detenida (pantalla validada mientras la impresora era inaccesible) no
+  desencadena ningún fin.
 - La impresora se lee, no avisa por sí misma: un evento de menos de
   10 segundos puede pasar desapercibido.
 - La XL indica una sola temperatura de boquilla.

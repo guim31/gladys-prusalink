@@ -375,7 +375,9 @@ export class Hub {
     }
     const message = this.statusMessage();
     const links = [...this.printers.values()].map((p) => p.link);
-    const connected = message === null && links.some((link) => link.connected);
+    // One printer down does not make the others fail: connected as soon as one
+    // answers, with the message of the others.
+    const connected = links.some((link) => link.connected);
     // A printer still on its first attempt: nothing to say yet.
     if (!connected && message === null && links.some((l) => !l.connected && !l.lastError)) {
       return;
@@ -479,8 +481,9 @@ export class Hub {
     printer.cameraAt = this.now();
     try {
       const image = await this.#cameraImage(printer);
+      // The device external id: the core looks the device up, then its camera feature.
       await this.gladys.publishCameraImage(
-        ids.feature('camera'),
+        ids.device,
         `${image.mime};base64,${image.data.toString('base64')}`,
       );
     } catch (err) {

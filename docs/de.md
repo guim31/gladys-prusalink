@@ -175,6 +175,9 @@ Die Variablen liest du in den folgenden Aktionen zum Beispiel mit
 
 - Bis zu drei Drucker.
 - Kein Hochladen von Dateien, kein Druckstart aus Gladys, kein Temperatur- oder G-Code-Befehl, kein Zeitraffer, kein Prusa Connect (Cloud).
+- Ein Druck, der ohne Fertig oder Abgebrochen zu Inaktiv oder Bereit
+  zurückkehrt (Display bestätigt, während der Drucker nicht erreichbar war),
+  löst kein Ende aus.
 - Der Drucker wird gelesen, er meldet nichts von sich aus: Ein Ereignis von
   weniger als 10 Sekunden kann übersehen werden.
 - Der XL meldet nur eine Düsentemperatur.

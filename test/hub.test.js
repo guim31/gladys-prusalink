@@ -211,6 +211,34 @@ test('PrusaLink on a Raspberry Pi: digest with qop, and its camera', async (t) =
   const ack = await gladys.fake.getImage(created(gladys));
   assert.equal(ack.success, true, ack.error);
   assert.match(ack.data.image, /^image\/png;base64,iVBOR/);
+  // Pushed to the device once it is added (the core finds its camera feature).
+  await gladys.fake.deviceCreated(created(gladys));
+  await until(() => gladys.fake.cameraImages.length > 0);
+  assert.equal(gladys.fake.cameraImages[0].device_external_id, deviceId(1));
+});
+
+test('a command during a slow read is still followed by a quick re-read', async (t) => {
+  const world = await createWorld({
+    timings: {
+      activeInterval: 5000,
+      idleInterval: 5000,
+      retryInterval: 5000,
+      materialInterval: 0,
+      identityInterval: 3600_000,
+      afterCommand: 20,
+    },
+  });
+  t.after(world.stop);
+  const { gladys, servers, hub } = world;
+  const [printer] = servers;
+  printer.setPrinting({ id: 11 });
+  await hub.printers.get(1).link.refresh();
+  const link = hub.printers.get(1).link;
+  const slow = link.refresh();
+  const ack = await gladys.fake.setValue(created(gladys), { external_id: featureId('pause') }, 1);
+  assert.equal(ack.success, true, ack.error);
+  await slow;
+  await until(() => state(gladys, 'state') === 'En pause', 1000);
 });
 
 test('a digest nonce that expires is renewed without an error', async (t) => {

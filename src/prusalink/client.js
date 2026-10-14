@@ -9,8 +9,9 @@
 // `algorithm` when there is no qop (pyprusalink's workaround, kept here).
 // PrusaLink on a Raspberry Pi may send `qop="auth"`: both are handled.
 // Older firmwares authenticate with an `X-Api-Key` header instead: when the
-// digest is refused, the same secret is tried once as an API key, and the
-// mode that worked is kept.
+// printer offers no digest challenge, the same secret is tried once as an API
+// key, and the mode that worked is kept. A refused digest is never retried as
+// a key: that would send the password in clear.
 //
 // Errors are sorted into the few kinds the rest of the integration acts upon,
 // and their messages never contain the password.
@@ -143,6 +144,7 @@ export class PrusaLinkClient {
     this.mode = 'digest';
     this.challenge = null;
     this.nc = 0;
+    this.apiKeyTried = false;
   }
 
   #authorization(method, uri) {
@@ -177,6 +179,15 @@ export class PrusaLinkClient {
     }
   }
 
+  #mayTryApiKey(header) {
+    if (this.apiKeyTried) {
+      return false;
+    }
+    // Only an `ApiKey` challenge, or none at all: never in answer to Basic or
+    // Bearer (a reverse proxy, another service).
+    return !header || /^\s*ApiKey\b/i.test(header);
+  }
+
   /**
    * One request, authenticated. Resolves the Response (2xx); throws a
    * PrusaLinkError otherwise.
@@ -205,17 +216,13 @@ export class PrusaLinkClient {
           ...base,
           ...this.#authorization(method, uri),
         });
-        if (response.status === 401) {
-          // A fresh nonce did not help: the password is wrong — or the
-          // printer wants an API key. Try that once.
-          await response.body?.cancel();
-          response = await this.#fetch(method, path, apiKeyHeaders());
-          if (response.ok) {
-            this.mode = 'apikey';
-          }
-        }
-      } else {
-        // No digest challenge at all: an API key printer.
+        // Still 401: the password is wrong. Never retried as an API key: the
+        // digest keeps the password off the wire, a header would not.
+      } else if (this.#mayTryApiKey(response.headers.get('www-authenticate'))) {
+        // No digest challenge: an older firmware that wants an API key.
+        // Tried once per client, so a host that is not a printer (another
+        // device at that address) does not receive it on every cycle.
+        this.apiKeyTried = true;
         response = await this.#fetch(method, path, apiKeyHeaders());
         if (response.ok) {
           this.mode = 'apikey';
@@ -281,15 +288,27 @@ export class PrusaLinkClient {
       await response.body?.cancel();
       throw Object.assign(new PrusaLinkError('invalid', 'Image too large'), { code: 'too_large' });
     }
-    let data;
+    // Read chunk by chunk: a body without Content-Length stops at maxBytes.
+    const chunks = [];
+    let size = 0;
     try {
-      data = Buffer.from(await response.arrayBuffer());
+      for await (const chunk of response.body ?? []) {
+        size += chunk.length;
+        if (size > maxBytes) {
+          await response.body.cancel().catch(() => {});
+          throw Object.assign(new PrusaLinkError('invalid', 'Image too large'), {
+            code: 'too_large',
+          });
+        }
+        chunks.push(chunk);
+      }
     } catch (err) {
+      if (err.code === 'too_large') {
+        throw err;
+      }
       throw new PrusaLinkError('unreachable', `PrusaLink unreachable (${err.message})`);
     }
-    if (data.length > maxBytes) {
-      throw Object.assign(new PrusaLinkError('invalid', 'Image too large'), { code: 'too_large' });
-    }
+    const data = Buffer.concat(chunks);
     const mime = imageType(data);
     if (!mime) {
       throw Object.assign(new PrusaLinkError('invalid', 'Not a PNG or JPEG image'), {

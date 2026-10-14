@@ -57,8 +57,9 @@ links it from the Configuration screen.
   `Printer API`), answered the way the firmware expects: no `qop`, no
   `algorithm` (firmwares before 5.2 refuse it), the nonce reused until the
   printer says it is stale. PrusaLink on a Raspberry Pi may ask for
-  `qop="auth"`: handled too. When the digest is refused, the same secret is
-  tried once as an `X-Api-Key` (older firmwares).
+  `qop="auth"`: handled too. When the printer offers no digest challenge (older
+  firmwares), the same secret is tried once as an `X-Api-Key`; a refused digest is
+  never retried as a key, which would send the password in clear.
 - The container reads `/api/v1/status` every 10 s during a print and every
   30 s otherwise; `/api/v1/job` once per job (file name, thumbnail),
   `/api/printer` once a minute (filament type), `/api/v1/info` and

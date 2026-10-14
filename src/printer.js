@@ -76,6 +76,9 @@ export class PrinterLink extends EventEmitter {
     this.camera = false;
     this.timer = null;
     this.running = null;
+    // A re-read asked for after a command: a cycle in progress must not push it back.
+    this.refreshDue = 0;
+    this.jobTried = null;
     this.stopped = false;
   }
 
@@ -111,9 +114,16 @@ export class PrinterLink extends EventEmitter {
   /** One reading cycle; concurrent calls share the one in progress. */
   refresh() {
     if (!this.running) {
+      const startedAt = this.now();
       this.running = this.#cycle().finally(() => {
         this.running = null;
-        this.#schedule(this.#nextDelay());
+        let delay = this.#nextDelay();
+        if (this.refreshDue > startedAt) {
+          delay = Math.min(delay, Math.max(0, this.refreshDue - this.now()));
+        } else {
+          this.refreshDue = 0;
+        }
+        this.#schedule(delay);
       });
     }
     return this.running;
@@ -146,10 +156,13 @@ export class PrinterLink extends EventEmitter {
       await this.#readIdentity();
     }
     const jobId = Number.isInteger(status.job?.id) ? status.job.id : null;
-    if (jobId !== null && this.job?.id !== jobId) {
+    // Once per job id, even when PrusaLink has nothing to say about it.
+    if (jobId !== null && this.jobTried !== jobId) {
+      this.jobTried = jobId;
       try {
         this.job = readJob(await this.client.getJson('/api/v1/job'));
       } catch (err) {
+        this.jobTried = null;
         logger.debug(`Printer ${this.slot}: no job details (${err.message})`);
       }
     }
@@ -256,6 +269,7 @@ export class PrinterLink extends EventEmitter {
       }
       throw new PrinterCommandError('unreachable', err.message);
     } finally {
+      this.refreshDue = this.now() + this.timings.afterCommand;
       this.#schedule(this.timings.afterCommand);
     }
     logger.info(`Printer ${this.slot}: ${name} sent (job ${jobId})`);

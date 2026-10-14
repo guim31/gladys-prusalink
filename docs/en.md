@@ -160,6 +160,8 @@ The variables are read in the following actions with, for instance,
 - Up to three printers.
 - No file upload, no print start from Gladys, no temperature or G-code
   command, no time-lapse, no Prusa Connect (cloud).
+- A print that goes back to Idle or Ready without showing Finished or Stopped
+  (screen cleared while the printer was unreachable) fires no end trigger.
 - The printer is read, not pushed: an event lasting less than 10 seconds may
   be missed.
 - The XL reports a single nozzle temperature.

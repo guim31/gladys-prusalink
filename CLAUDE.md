@@ -279,3 +279,11 @@ pyprusalink (Apache-2.0), de l'OpenAPI de Prusa-Link-Web (GPL : faits seulement)
 - **Piège du lanceur de tests** : `node --test` sans argument exécute **tous** les `.js` de `test/`, helpers
   compris ; un helper avec un point d'entrée autonome bloque la suite. Le simulateur réseau vit donc dans
   `tools/`.
+- **Piège du SDK (camera)** : `publishCameraImage(deviceExternalId, image)` attend l'`external_id` de
+  l'**appareil** ; le cœur (`saveCameraImage`) cherche l'appareil puis sa fonctionnalité `camera/image`. Lui
+  passer l'identifiant de la fonctionnalité donne un 404 `CAMERA_NOT_FOUND` (relevé par la relecture du
+  14/10/2026 ; gladys-octoprint, gladys-moonraker et gladys-bambulab ont la même erreur). Un test lit
+  `gladys.fake.cameraImages[0].device_external_id`.
+- **Clé d'API** : jamais essayée après un digest refusé (elle partirait en clair) ; seulement sans défi
+  digest (ou avec un défi `ApiKey`), une fois par client. Statut de connexion : connecté dès qu'une imprimante
+  répond, avec le message des autres.

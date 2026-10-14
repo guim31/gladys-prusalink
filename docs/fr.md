@@ -180,6 +180,9 @@ Les variables se lisent dans les actions suivantes avec, par exemple,
 - Pas d'envoi de fichier, pas de lancement d'impression depuis Gladys, aucune
   commande de température ni de G-code, pas de timelapse, pas de Prusa Connect
   (cloud).
+- Une impression qui revient à Au repos ou Prête sans passer par Terminée ou
+  Arrêtée (écran validé pendant que l'imprimante était injoignable) ne
+  déclenche aucune fin.
 - L'imprimante est lue, elle ne pousse rien : un évènement de moins de
   10 secondes peut passer inaperçu.
 - La XL n'indique qu'une seule température de buse.
