@@ -8,8 +8,8 @@
     "de": "Verfolge deine Prusa-3D-Drucker lokal mit PrusaLink: Fortschritt, Temperaturen, Alarme.",
     "es": "Siga sus impresoras 3D Prusa en local con PrusaLink: progreso, temperaturas, alertas."
   },
-  "version": "1.0.0",
-  "docker_image": "ghcr.io/guim31/gladys-prusalink:1.0.0",
+  "version": "1.0.1",
+  "docker_image": "ghcr.io/guim31/gladys-prusalink:1.0.1",
   "gladys_version": ">=5.1.0",
   "cover_image": "https://raw.githubusercontent.com/guim31/gladys-prusalink/main/cover.png",
   "categories": ["appliances"],
